@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analog Clock</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #000000;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .clock {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #000000;
+            border: 12px solid #ffffff;
+            position: relative;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.4), 
+                        inset 0 0 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .center-dot {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+
+        .hour-marks {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .hour-mark {
+            position: absolute;
+            width: 5px;
+            height: 15px;
+            background-color: #ffffff;
+            top: 5px;
+            left: 50%;
+            transform-origin: 50% 145px;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+        }
+
+        .minute-marks {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .minute-mark {
+            position: absolute;
+            width: 2px;
+            height: 8px;
+            background-color: #aaaaaa;
+            top: 5px;
+            left: 50%;
+            transform-origin: 50% 145px;
+        }
+
+        .hour-hand, .minute-hand, .second-hand {
+            position: absolute;
+            transform-origin: bottom center;
+            bottom: 50%;
+            left: 50%;
+            z-index: 10;
+            transform: translateX(-50%);
+        }
+
+        .hour-hand {
+            width: 8px;
+            height: 60px;
+            background-color: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .minute-hand {
+            width: 6px;
+            height: 90px;
+            background-color: #ffffff;
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .second-hand {
+            width: 2px;
+            height: 110px;
+            background-color: #ffffff;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+        }
+
+        .numbers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        
+        .number {
+            position: absolute;
+            font-size: 18px;
+            transform-origin: center;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            line-height: 24px;
+            color: #ffffff;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 25px;
+            background-color: #ffffff;
+            color: black;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease, opacity 0.5s ease;
+            opacity: 1;
+        }
+
+        .fullscreen-btn:hover {
+            background-color: #eeeeee;
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 255, 255, 0.4);
+        }
+        
+        .fullscreen-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .date-display {
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            z-index: 3;
+        }
+
+        /* Fullscreen styles */
+        .clock-container.fullscreen {
+            width: 80vh;
+            height: 80vh;
+        }
+
+        /* Adjust size for different screen orientations */
+        @media (orientation: portrait) {
+            .clock-container.fullscreen {
+                width: 80vw;
+                height: 80vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container" id="clockContainer">
+        <div class="clock">
+            <div class="hour-marks" id="hourMarks"></div>
+            <div class="minute-marks" id="minuteMarks"></div>
+            <div class="numbers" id="numbers"></div>
+            <div class="hour-hand" id="hourHand"></div>
+            <div class="minute-hand" id="minuteHand"></div>
+            <div class="second-hand" id="secondHand"></div>
+            <div class="center-dot"></div>
+        </div>
+        <div class="date-display" id="dateDisplay"></div>
+        <button class="fullscreen-btn" id="fullscreenBtn">Full Screen</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create hour marks
+            const hourMarksContainer = document.getElementById('hourMarks');
+            for (let i = 0; i < 12; i++) {
+                const hourMark = document.createElement('div');
+                hourMark.className = 'hour-mark';
+                hourMark.style.transform = `rotate(${i * 30}deg) translateX(-50%)`;
+                hourMarksContainer.appendChild(hourMark);
+            }
+
+            // Create minute marks
+            const minuteMarksContainer = document.getElementById('minuteMarks');
+            for (let i = 0; i < 60; i++) {
+                // Skip where hour marks are
+                if (i % 5 !== 0) {
+                    const minuteMark = document.createElement('div');
+                    minuteMark.className = 'minute-mark';
+                    minuteMark.style.transform = `rotate(${i * 6}deg) translateX(-50%)`;
+                    minuteMarksContainer.appendChild(minuteMark);
+                }
+            }
+            
+            // Create clock numbers
+            const numbersContainer = document.getElementById('numbers');
+            for (let i = 1; i <= 12; i++) {
+                const number = document.createElement('div');
+                number.className = 'number';
+                number.textContent = i;
+                // Calculate position (subtract 90 degrees to start at 12 o'clock)
+                const angle = (i * 30 - 90) * (Math.PI / 180);
+                const radius = 120; // distance from center
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+                number.style.left = `calc(50% + ${x}px)`;
+                number.style.top = `calc(50% + ${y}px)`;
+                number.style.transform = 'translate(-50%, -50%)';
+                numbersContainer.appendChild(number);
+            }
+
+            // Get elements
+            const hourHand = document.getElementById('hourHand');
+            const minuteHand = document.getElementById('minuteHand');
+            const secondHand = document.getElementById('secondHand');
+            const clockContainer = document.getElementById('clockContainer');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            
+            let buttonHideTimeout;
+
+            // Get date display element
+            const dateDisplay = document.getElementById('dateDisplay');
+            
+            // Update clock
+            function updateClock() {
+                const now = new Date();
+                const hours = now.getHours() % 12;
+                const minutes = now.getMinutes();
+                const seconds = now.getSeconds();
+                const milliseconds = now.getMilliseconds();
+
+                // Calculate the angles with smoother second hand movement
+                const hourAngle = (hours * 30) + (minutes * 0.5); // 30 degrees per hour + 0.5 degrees per minute
+                const minuteAngle = minutes * 6; // 6 degrees per minute
+                const secondAngle = seconds * 6 + (milliseconds * 0.006); // 6 degrees per second + smooth millisecond movement
+
+                // Apply rotations
+                hourHand.style.transform = `translateX(-50%) rotate(${hourAngle}deg)`;
+                minuteHand.style.transform = `translateX(-50%) rotate(${minuteAngle}deg)`;
+                secondHand.style.transform = `translateX(-50%) rotate(${secondAngle}deg)`;
+                
+                // Update date display in a single line
+                const day = now.getDate().toString().padStart(2, '0');
+                const month = now.toLocaleString('default', { month: 'short' });
+                const year = now.getFullYear();
+                dateDisplay.textContent = `${day} ${month} ${year}`;
+                
+                // Request next frame for smoother second hand
+                requestAnimationFrame(updateClock);
+            }
+
+            // Start the clock
+            requestAnimationFrame(updateClock);
+
+            // Fullscreen functionality
+            fullscreenBtn.addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                        document.documentElement.msRequestFullscreen();
+                    }
+                    clockContainer.classList.add('fullscreen');
+                    fullscreenBtn.textContent = 'Press ESC to exit full screen';
+                    
+                    // Hide button after 3 seconds
+                    clearTimeout(buttonHideTimeout);
+                    buttonHideTimeout = setTimeout(() => {
+                        fullscreenBtn.classList.add('hidden');
+                    }, 3000);
+                } else {
+                    exitFullscreen();
+                }
+            });
+            
+            function exitFullscreen() {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+                clockContainer.classList.remove('fullscreen');
+                fullscreenBtn.textContent = 'Full Screen';
+                fullscreenBtn.classList.remove('hidden');
+                clearTimeout(buttonHideTimeout);
+            }
+
+            // Listen for fullscreen change
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+            function handleFullscreenChange() {
+                if (!document.fullscreenElement && 
+                    !document.webkitFullscreenElement && 
+                    !document.mozFullScreenElement && 
+                    !document.msFullscreenElement) {
+                    clockContainer.classList.remove('fullscreen');
+                    fullscreenBtn.textContent = 'Full Screen';
+                    fullscreenBtn.classList.remove('hidden');
+                    clearTimeout(buttonHideTimeout);
+                }
+            }
+            
+            // Show button on mouse movement in fullscreen
+            document.addEventListener('mousemove', function() {
+                if (document.fullscreenElement) {
+                    fullscreenBtn.classList.remove('hidden');
+                    clearTimeout(buttonHideTimeout);
+                    buttonHideTimeout = setTimeout(() => {
+                        fullscreenBtn.classList.add('hidden');
+                    }, 3000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
